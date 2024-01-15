@@ -20,7 +20,7 @@ pub fn main() !void {
 
         if (maybe_last) |last| {
             //std.debug.print("removing {}\n", .{last});
-            const removed = test_set.remove(last);
+            const removed = try test_set.removeShrink(last);
             std.debug.assert(removed);
             maybe_last = null;
         }

@@ -17,7 +17,10 @@ pub fn getAutoGrowFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
     return struct {
         fn grow(self: Ctx, count: usize, capacity: usize) usize {
             _ = self; // autofix
-            return @max(capacity + (capacity >> 1), count);
+            return @max(
+                capacity + (capacity >> 1),
+                count,
+            );
         }
     }.grow;
 }
@@ -25,10 +28,14 @@ pub fn getAutoGrowFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
 pub fn getAutoShrinkFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
     return struct {
         fn shrink(self: Ctx, count: usize, capacity: usize) usize {
-            _ = count; // autofix
-            _ = capacity; // autofix
             _ = self; // autofix
-            return 0;
+            return @max(
+                @as(
+                    usize,
+                    (capacity >> 3) * 5,
+                ),
+                count,
+            );
         }
     }.shrink;
 }
@@ -151,6 +158,27 @@ pub fn FlatHashSet(comptime T: type, comptime Ctx: type) type {
                 return true;
             }
             return false;
+        }
+
+        /// remove a value from the hash set and shrink
+        /// \param v the value to remove
+        /// \return true if the value was present and was removed
+        pub inline fn removeShrink(self: *Self, v: T) !bool {
+            const removed = self.remove(v);
+            if (removed) try self.trim();
+            return removed;
+        }
+
+        /// resize the set to better fit the contents of the set
+        pub inline fn trim(self: *Self) !void {
+            const full_cap = bucketsToCapacity(self.mask);
+            const shrink_cap = self.ctx.shrink(self.len, full_cap);
+            const shrink_buckets = capacityToBuckets(shrink_cap);
+
+            if (shrink_buckets < full_cap) {
+                //std.debug.print("shrinking!\n", .{});
+                try self.resize(shrink_cap);
+            }
         }
 
         inline fn indexOf(self: *const Self, v: T) ?usize {
@@ -309,7 +337,10 @@ pub fn FlatHashSet(comptime T: type, comptime Ctx: type) type {
         fn resize(self: *Self, new_capacity: usize) !void {
             const buckets = capacityToBuckets(new_capacity);
 
-            //std.debug.print("resizing {}\n", .{buckets});
+            //std.debug.print("resizing {}. {}\n", .{
+            //    buckets,
+            //    self.len,
+            //});
 
             const layout_info = LayoutHelp.forBuckets(buckets);
             const alloc_align: u29 = @intCast(LayoutHelp.alignment);

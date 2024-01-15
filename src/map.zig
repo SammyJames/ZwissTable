@@ -64,6 +64,17 @@ pub fn FlatHashMap(comptime K: type, comptime V: type, comptime Ctx: type) type 
                 .value = undefined,
             });
         }
+
+        pub inline fn removeShrink(self: *Self, k: K) !bool {
+            return self.set.removeShrink(.{
+                .key = k,
+                .value = undefined,
+            });
+        }
+
+        pub inline fn trim(self: *Self) !void {
+            return self.set.trim();
+        }
     };
 }
 
