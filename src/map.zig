@@ -174,6 +174,8 @@ pub fn AutoMapContext(comptime K: type, comptime V: type, comptime M: ?Operation
     return struct {
         const Self = @This();
         const SetType = Pair(K, V);
+        const key_hasher = std.hash_map.getAutoHashFn(K, Self);
+        const key_eq = std.hash_map.getAutoEqlFn(K, Self);
 
         pub const Mode = M orelse detect: {
             const x86 = std.Target.x86;
@@ -189,14 +191,12 @@ pub fn AutoMapContext(comptime K: type, comptime V: type, comptime M: ?Operation
             break :detect OperationMode.Unsupported;
         };
 
-        pub fn hash(self: Self, v: SetType) u64 {
-            const key_hasher = std.hash_map.getAutoHashFn(K, Self);
-            return key_hasher(self, v.key);
+        pub inline fn hash(self: Self, v: SetType) u64 {
+            return @call(.always_inline, key_hasher, .{ self, v.key });
         }
 
-        pub fn eq(self: Self, lhs: SetType, rhs: SetType) bool {
-            const key_eq = std.hash_map.getAutoEqlFn(K, Self);
-            return key_eq(self, lhs.key, rhs.key);
+        pub inline fn eq(self: Self, lhs: SetType, rhs: SetType) bool {
+            return @call(.always_inline, key_eq, .{ self, lhs.key, rhs.key });
         }
 
         pub const grow = set.getAutoGrowFn(Self);

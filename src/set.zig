@@ -20,9 +20,9 @@ pub fn AutoHashSet_Mode(comptime T: type, comptime M: OperationMode) type {
     return SwissHashSet(T, AutoContext(T, M));
 }
 
-pub fn getAutoGrowFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
+pub fn getAutoGrowFn(comptime Ctx: type) (fn (Ctx, usize, usize) callconv(.Inline) usize) {
     return struct {
-        fn grow(self: Ctx, count: usize, capacity: usize) usize {
+        inline fn grow(self: Ctx, count: usize, capacity: usize) usize {
             _ = self; // autofix
             return @max(
                 capacity + (capacity >> 1),
@@ -32,9 +32,9 @@ pub fn getAutoGrowFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
     }.grow;
 }
 
-pub fn getAutoShrinkFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
+pub fn getAutoShrinkFn(comptime Ctx: type) (fn (Ctx, usize, usize) callconv(.Inline) usize) {
     return struct {
-        fn shrink(self: Ctx, count: usize, capacity: usize) usize {
+        inline fn shrink(self: Ctx, count: usize, capacity: usize) usize {
             _ = self; // autofix
             return @max(
                 @as(
