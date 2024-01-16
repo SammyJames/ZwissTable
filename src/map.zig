@@ -23,7 +23,7 @@ fn Pair(
     };
 }
 
-/// A flat hash map where the context is automatically inferred
+/// A swiss hash map where the context is automatically inferred
 pub fn AutoHashMap(
     comptime K: type,
     comptime V: type,
@@ -31,6 +31,8 @@ pub fn AutoHashMap(
     return SwissHashMap(K, V, AutoMapContext(K, V, null));
 }
 
+/// A swiss hash map where the context is automatically inferred but the caller
+/// can supply an explicit operation mode
 pub fn AutoHashMap_Mode(
     comptime K: type,
     comptime V: type,
@@ -65,6 +67,10 @@ pub fn SwissHashMap(
             self.set.deinit();
         }
 
+        /// add a value to the map
+        /// \param k key
+        /// \param v value
+        /// \return true if added
         pub inline fn add(self: *Self, k: K, v: V) !bool {
             return self.set.add(.{
                 .key = k,
@@ -72,6 +78,9 @@ pub fn SwissHashMap(
             });
         }
 
+        /// find an existing value or add it if not present
+        /// \param k the key
+        /// \return a pointer to the value of key
         pub inline fn findOrAdd(self: *Self, k: K) !*V {
             const val: Pair(K, V) = .{
                 .key = k,
@@ -92,6 +101,9 @@ pub fn SwissHashMap(
             return error.Whoops;
         }
 
+        /// get a value from the map
+        /// \param k the key
+        /// \return a copy of the value for key
         pub inline fn get(self: *const Self, k: K) ?V {
             const opt_idx = self.set.indexOf(.{
                 .key = k,
@@ -105,6 +117,9 @@ pub fn SwissHashMap(
             return null;
         }
 
+        /// get a value from the map as a pointer
+        /// \param k the key
+        /// \return a pointer to the value for key
         pub inline fn getPtr(self: *Self, k: K) ?*V {
             const opt_idx = self.set.indexOf(.{
                 .key = k,
@@ -118,6 +133,9 @@ pub fn SwissHashMap(
             return null;
         }
 
+        /// determine if the map contains the supplied key
+        /// \param k the key
+        /// \return true if key is present in the map
         pub inline fn contains(self: *const Self, k: K) bool {
             return self.set.contains(.{
                 .key = k,
@@ -125,6 +143,9 @@ pub fn SwissHashMap(
             });
         }
 
+        /// remove a pair from the map by key
+        /// \param k the key
+        /// \return true if the key was removed
         pub inline fn remove(self: *Self, k: K) bool {
             return self.set.remove(.{
                 .key = k,
@@ -132,6 +153,9 @@ pub fn SwissHashMap(
             });
         }
 
+        /// remove a pair from the map by key and shrink
+        /// \param k the key
+        /// \return true if the key was removed
         pub inline fn removeShrink(self: *Self, k: K) !bool {
             return self.set.removeShrink(.{
                 .key = k,
@@ -139,6 +163,7 @@ pub fn SwissHashMap(
             });
         }
 
+        /// attempt to shrink the map to fit the contents
         pub inline fn trim(self: *Self) !void {
             return self.set.trim();
         }

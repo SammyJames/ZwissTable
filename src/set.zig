@@ -14,6 +14,8 @@ pub fn AutoHashSet(comptime T: type) type {
     return SwissHashSet(T, AutoContext(T, null));
 }
 
+/// A swiss table set where the context is automatically inferred but the caller
+/// can supply an explicit operation mode
 pub fn AutoHashSet_Mode(comptime T: type, comptime M: OperationMode) type {
     return SwissHashSet(T, AutoContext(T, M));
 }
