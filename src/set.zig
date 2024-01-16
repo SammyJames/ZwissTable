@@ -471,25 +471,25 @@ fn LayoutHelper(comptime M: OperationMode, comptime T: type) type {
     };
 }
 
-test "FlatHashSet init" {
+test "SwissHashSet init" {
     var set = AutoHashSet(u32).init(std.testing.allocator);
     defer set.deinit();
 }
 
-test "FlatHashSet add" {
+test "SwissHashSet add" {
     var set = AutoHashSet(u32).init(std.testing.allocator);
     defer set.deinit();
     try std.testing.expect(try set.add(0xFFFF_FFFF));
 }
 
-test "FlatHashSet contains" {
+test "SwissHashSet contains" {
     var set = AutoHashSet(u32).init(std.testing.allocator);
     defer set.deinit();
     try std.testing.expect(try set.add(0xFFFF_FFFF));
     try std.testing.expect(set.contains(0xFFFF_FFFF));
 }
 
-test "FlatHashSet remove" {
+test "SwissHashSet remove" {
     var set = AutoHashSet(u32).init(std.testing.allocator);
     defer set.deinit();
 
@@ -500,7 +500,7 @@ test "FlatHashSet remove" {
     try std.testing.expect(!set.contains(0xFFFF_FFFF));
 }
 
-test "FlatHashSet random 1024*1024" {
+test "SwissHashSet random 1024*1024" {
     const RndGen = std.rand.DefaultPrng;
 
     var set = AutoHashSet(u32).init(std.testing.allocator);

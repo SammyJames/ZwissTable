@@ -179,18 +179,18 @@ pub fn AutoMapContext(comptime K: type, comptime V: type, comptime M: ?Operation
     };
 }
 
-test "FlatHashMap init" {
+test "SwissHashMap init" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
 }
 
-test "FlatHashMap add" {
+test "SwissHashMap add" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
     try std.testing.expect(try map.add(0xFFFF_FFFF, 0.1));
 }
 
-test "FlatHashMap findOrAdd" {
+test "SwissHashMap findOrAdd" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
 
@@ -203,7 +203,7 @@ test "FlatHashMap findOrAdd" {
     try std.testing.expectEqual(map.get(0xFFFF_FFFF) orelse 0.0, 0.1);
 }
 
-test "FlatHashMap get" {
+test "SwissHashMap get" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
 
@@ -219,7 +219,7 @@ test "FlatHashMap get" {
     }
 }
 
-test "FlatHashMap getPtr" {
+test "SwissHashMap getPtr" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
 
@@ -232,14 +232,14 @@ test "FlatHashMap getPtr" {
     );
 }
 
-test "FlatHashMap contains" {
+test "SwissHashMap contains" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
     try std.testing.expect(try map.add(0xFFFF_FFFF, 0.1));
     try std.testing.expect(map.contains(0xFFFF_FFFF));
 }
 
-test "FlatHashMap remove" {
+test "SwissHashMap remove" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
 
@@ -250,7 +250,7 @@ test "FlatHashMap remove" {
     try std.testing.expect(!map.contains(0xFFFF_FFFF));
 }
 
-test "FlatHashMap random 1024*1024" {
+test "SwissHashMap random 1024*1024" {
     const RndGen = std.rand.DefaultPrng;
 
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
