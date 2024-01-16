@@ -4,11 +4,7 @@ const lib = @import("lib.zig");
 const RndGen = std.rand.DefaultPrng;
 
 fn test_swiss(alloc: std.mem.Allocator, rnd: *RndGen) !void {
-    var test_set = lib.AutoHashMap_Mode(
-        u64,
-        f64,
-        lib.OperationMode.AVX_2,
-    ).init(alloc);
+    var test_set = lib.AutoHashMap(u64, f64).init(alloc);
 
     var maybe_last: ?u64 = null;
     for (0..1024 * 1024 * 8) |i| {
