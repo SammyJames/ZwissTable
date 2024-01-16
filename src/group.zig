@@ -20,8 +20,8 @@ pub fn Group(comptime M: OperationMode) type {
             };
         }
 
-        pub inline fn match(self: *const Self, val: LittleHash) MaskType {
-            const to_match: VecType = @splat(val.value);
+        pub inline fn match(self: *const Self, lil: LittleHash) MaskType {
+            const to_match: VecType = @splat(lil.value);
             return MaskType.init(@bitCast(self.value == to_match));
         }
 
@@ -38,7 +38,7 @@ pub fn Group(comptime M: OperationMode) type {
 
         pub inline fn convertForRehash(self: *const Self) Self {
             const zero: VecType = @splat(0);
-            const special = zero > self.value;
+            const special: @Vector(M.vectorWidth(), bool) = zero > self.value;
             const tester: VecType = @splat('\x80');
             return .{ .value = @select(u8, special, tester, zero) };
         }

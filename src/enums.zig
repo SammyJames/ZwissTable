@@ -3,7 +3,8 @@
 const std = @import("std");
 const Bitmask = @import("bitmask.zig").Bitmask;
 
-///
+/// A strongly typed wrapper around a u8 used to represent the state of an
+/// element in the tightly packed little hash used for lookup
 pub const LittleHash = packed struct {
     const Self = @This();
     pub const Empty: Self = .{
@@ -44,7 +45,7 @@ pub const LittleHash = packed struct {
     }
 };
 
-///
+/// Determines the width of vectors
 pub const OperationMode = enum {
     const Self = @This();
 

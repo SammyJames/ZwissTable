@@ -6,35 +6,58 @@ const builtin = @import("builtin");
 const enums = @import("enums.zig");
 const set = @import("set.zig");
 
-const FlatHashSet = set.FlatHashSet;
+const SwissHashSet = set.SwissHashSet;
 const LittleHash = enums.LittleHash;
 const OperationMode = enums.OperationMode;
 
-fn Pair(comptime K: type, comptime V: type) type {
+/// A key value pair
+/// \tparam K key type
+/// \tparam V value type
+fn Pair(
+    comptime K: type,
+    comptime V: type,
+) type {
     return struct {
         key: K,
         value: V,
     };
 }
 
-pub fn AutoHashMap(comptime K: type, comptime V: type) type {
-    return FlatHashMap(K, V, AutoMapContext(K, V));
+/// A flat hash map where the context is automatically inferred
+pub fn AutoHashMap(
+    comptime K: type,
+    comptime V: type,
+) type {
+    return SwissHashMap(K, V, AutoMapContext(K, V, null));
+}
+
+pub fn AutoHashMap_Mode(
+    comptime K: type,
+    comptime V: type,
+    comptime M: OperationMode,
+) type {
+    return SwissHashMap(K, V, AutoMapContext(K, V, M));
 }
 
 /// Heckin' hash map mate
-/// \tparam K the key type
-/// \tparam V the value type
-/// \tparam Ctx configuration values for the hash map -> set
-pub fn FlatHashMap(comptime K: type, comptime V: type, comptime Ctx: type) type {
+/// \tparam K the key type of the map, must be hashable and equal comparable
+/// \tparam V the value type of the map
+/// \tparam Ctx a set of utilities like hash/equal/grow/shrink/operation mode
+pub fn SwissHashMap(
+    comptime K: type,
+    comptime V: type,
+    comptime Ctx: type,
+) type {
     return struct {
         const Self = @This();
         const SetType = Pair(K, V);
 
-        set: FlatHashSet(SetType, Ctx),
+        /// the inner set the map is built upon
+        set: SwissHashSet(SetType, Ctx),
 
         pub inline fn init(alloc: std.mem.Allocator) Self {
             return .{
-                .set = FlatHashSet(SetType, Ctx).init(alloc),
+                .set = SwissHashSet(SetType, Ctx).init(alloc),
             };
         }
 
@@ -122,12 +145,12 @@ pub fn FlatHashMap(comptime K: type, comptime V: type, comptime Ctx: type) type 
     };
 }
 
-pub fn AutoMapContext(comptime K: type, comptime V: type) type {
+pub fn AutoMapContext(comptime K: type, comptime V: type, comptime M: ?OperationMode) type {
     return struct {
         const Self = @This();
         const SetType = Pair(K, V);
 
-        pub const Mode = detect: {
+        pub const Mode = M orelse detect: {
             const x86 = std.Target.x86;
             if (x86.featureSetHas(builtin.cpu.features, .avx512f))
                 break :detect OperationMode.AVX_512;

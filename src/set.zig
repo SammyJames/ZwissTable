@@ -9,8 +9,13 @@ const Probe = @import("probe.zig").Probe;
 const LittleHash = enums.LittleHash;
 pub const OperationMode = enums.OperationMode;
 
+/// A swiss table set where the context is automatically inferred
 pub fn AutoHashSet(comptime T: type) type {
-    return FlatHashSet(T, AutoContext(T));
+    return SwissHashSet(T, AutoContext(T, null));
+}
+
+pub fn AutoHashSet_Mode(comptime T: type, comptime M: OperationMode) type {
+    return SwissHashSet(T, AutoContext(T, M));
 }
 
 pub fn getAutoGrowFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
@@ -40,10 +45,10 @@ pub fn getAutoShrinkFn(comptime Ctx: type) (fn (Ctx, usize, usize) usize) {
     }.shrink;
 }
 
-pub fn AutoContext(comptime T: type) type {
+pub fn AutoContext(comptime T: type, comptime M: ?OperationMode) type {
     return struct {
         const Self = @This();
-        pub const Mode = detect: {
+        pub const Mode = M orelse detect: {
             const x86 = std.Target.x86;
             if (x86.featureSetHas(builtin.cpu.features, .avx512f))
                 break :detect OperationMode.AVX_512;
@@ -66,7 +71,7 @@ pub fn AutoContext(comptime T: type) type {
 /// Heckin' hash set mate
 /// \tparam T the type of thing in the hash set
 /// \tparam Ctx configuration values for the hash set
-pub fn FlatHashSet(comptime T: type, comptime Ctx: type) type {
+pub fn SwissHashSet(comptime T: type, comptime Ctx: type) type {
     return struct {
         const Self = @This();
         const TableGroup = Group(Ctx.Mode);

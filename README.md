@@ -1,3 +1,9 @@
-# flathashz
+# ZwissTable
 
-a zig implementation of a swiss table for hash sets and maps
+Zig port of Absiel swiss table supporting:
+
+* SSE 4.2
+* AVX 2
+* AVX 512
+
+Uses std hasher

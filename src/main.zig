@@ -1,26 +1,22 @@
 const std = @import("std");
-const set = @import("set.zig");
+const lib = @import("lib.zig");
 
 const RndGen = std.rand.DefaultPrng;
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer std.debug.assert(gpa.deinit() == .ok);
+fn test_swiss(alloc: std.mem.Allocator, rnd: *RndGen) !void {
+    var test_set = lib.AutoHashMap_Mode(
+        u64,
+        f64,
+        lib.OperationMode.AVX_2,
+    ).init(alloc);
 
-    var test_set = set.AutoHashSet(u32).init(gpa.allocator());
-    defer test_set.deinit();
-
-    var rnd = RndGen.init(0);
-
-    var maybe_last: ?u32 = null;
+    var maybe_last: ?u64 = null;
     for (0..1024 * 1024 * 8) |i| {
-        const generated = rnd.random().int(u32);
-        //std.debug.print("adding {}\n", .{generated});
-        const added = try test_set.add(generated);
+        const generated = rnd.random().int(u64);
+        const added = try test_set.add(generated, 0.1);
 
         if (maybe_last) |last| {
-            //std.debug.print("removing {}\n", .{last});
-            const removed = try test_set.removeShrink(last);
+            const removed = test_set.remove(last);
             std.debug.assert(removed);
             maybe_last = null;
         }
@@ -29,6 +25,53 @@ pub fn main() !void {
             maybe_last = generated;
         }
     }
+}
 
-    std.debug.print("total: {}\n", .{test_set.len});
+fn test_std(alloc: std.mem.Allocator, rnd: *RndGen) !void {
+    var test_set = std.AutoHashMap(u64, f64).init(alloc);
+
+    var maybe_last: ?u64 = null;
+    for (0..1024 * 1024 * 8) |i| {
+        const generated = rnd.random().int(u64);
+        try test_set.put(generated, 0.1);
+
+        if (maybe_last) |last| {
+            const removed = test_set.remove(last);
+            std.debug.assert(removed);
+            maybe_last = null;
+        }
+
+        if (i % 3 == 0) {
+            maybe_last = generated;
+        }
+    }
+}
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer std.debug.assert(gpa.deinit() == .ok);
+
+    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    defer arena.deinit();
+
+    var rnd = RndGen.init(0);
+    {
+        const start = try std.time.Instant.now();
+        try test_swiss(arena.allocator(), &rnd);
+        const end = try std.time.Instant.now();
+        std.debug.print(
+            "swiss: {}ms\n",
+            .{end.since(start) / 1_000_000},
+        );
+    }
+
+    {
+        const start = try std.time.Instant.now();
+        try test_std(arena.allocator(), &rnd);
+        const end = try std.time.Instant.now();
+        std.debug.print(
+            "std: {}ms\n",
+            .{end.since(start) / 1_000_000},
+        );
+    }
 }
