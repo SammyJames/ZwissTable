@@ -46,9 +46,49 @@ pub fn FlatHashMap(comptime K: type, comptime V: type, comptime Ctx: type) type 
         }
 
         pub inline fn findOrAdd(self: *Self, k: K) !*V {
-            _ = self; // autofix
-            _ = k; // autofix
+            const val: Pair(K, V) = .{
+                .key = k,
+                .value = undefined,
+            };
+
+            var opt_idx = self.set.indexOf(val);
+            if (opt_idx == null) {
+                if (try self.set.add(val)) {
+                    opt_idx = self.set.indexOf(val);
+                }
+            }
+
+            if (opt_idx) |idx| {
+                return &self.set.big[idx].value;
+            }
+
             return error.Whoops;
+        }
+
+        pub inline fn get(self: *const Self, k: K) ?V {
+            const opt_idx = self.set.indexOf(.{
+                .key = k,
+                .value = undefined,
+            });
+
+            if (opt_idx) |idx| {
+                return self.set.big[idx].value;
+            }
+
+            return null;
+        }
+
+        pub inline fn getPtr(self: *Self, k: K) ?*V {
+            const opt_idx = self.set.indexOf(.{
+                .key = k,
+                .value = undefined,
+            });
+
+            if (opt_idx) |idx| {
+                return &self.set.big[idx].value;
+            }
+
+            return null;
         }
 
         pub inline fn contains(self: *const Self, k: K) bool {
@@ -127,8 +167,42 @@ test "FlatHashMap findOrAdd" {
     var map = AutoHashMap(u32, f32).init(std.testing.allocator);
     defer map.deinit();
 
+    try std.testing.expect(try map.add(0xFFFF_FFFF, 0.0));
+
     const spot = try map.findOrAdd(0xFFFF_FFFF);
     spot.* = 0.1;
+
+    try std.testing.expect(map.contains(0xFFFF_FFFF));
+    try std.testing.expectEqual(map.get(0xFFFF_FFFF) orelse 0.0, 0.1);
+}
+
+test "FlatHashMap get" {
+    var map = AutoHashMap(u32, f32).init(std.testing.allocator);
+    defer map.deinit();
+
+    try std.testing.expect(try map.add(0xFFFF_FFFF, 0.1));
+    try std.testing.expect(map.contains(0xFFFF_FFFF));
+
+    const found = map.getPtr(0xFFFF_FFFF);
+    if (found) |f| {
+        try std.testing.expectEqual(
+            f.*,
+            0.1,
+        );
+    }
+}
+
+test "FlatHashMap getPtr" {
+    var map = AutoHashMap(u32, f32).init(std.testing.allocator);
+    defer map.deinit();
+
+    try std.testing.expect(try map.add(0xFFFF_FFFF, 0.1));
+    try std.testing.expect(map.contains(0xFFFF_FFFF));
+
+    try std.testing.expectEqual(
+        map.get(0xFFFF_FFFF) orelse 0.0,
+        0.1,
+    );
 }
 
 test "FlatHashMap contains" {

@@ -181,7 +181,10 @@ pub fn FlatHashSet(comptime T: type, comptime Ctx: type) type {
             }
         }
 
-        inline fn indexOf(self: *const Self, v: T) ?usize {
+        /// find the index of a value
+        /// \param v the value to find
+        /// \return the index of the value or null
+        pub inline fn indexOf(self: *const Self, v: T) ?usize {
             const hashed = self.ctx.hash(v);
             const lil_hash = LittleHash.from(hashed);
             var prober = TableProbe.init(hashed & self.mask, 0);
