@@ -49,10 +49,14 @@ pub const LittleHash = packed struct {
 pub const OperationMode = enum {
     const Self = @This();
 
-    Unsupported, //< you're fugged
-    SSE_4_2, //< 16 byte wide buckets
-    AVX_2, //< 32 byte wide buckets
-    AVX_512, //< 64 byte wide buckets
+    /// you're fugged
+    Unsupported,
+    /// 16 byte wide buckets
+    SSE_4_2,
+    /// 32 byte wide buckets
+    AVX_2,
+    /// 64 byte wide buckets
+    AVX_512,
 
     pub inline fn vectorWidth(comptime self: Self) comptime_int {
         return switch (self) {
