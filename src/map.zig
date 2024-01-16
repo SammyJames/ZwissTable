@@ -21,6 +21,10 @@ pub fn AutoHashMap(comptime K: type, comptime V: type) type {
     return FlatHashMap(K, V, AutoMapContext(K, V));
 }
 
+/// Heckin' hash map mate
+/// \tparam K the key type
+/// \tparam V the value type
+/// \tparam Ctx configuration values for the hash map -> set
 pub fn FlatHashMap(comptime K: type, comptime V: type, comptime Ctx: type) type {
     return struct {
         const Self = @This();
